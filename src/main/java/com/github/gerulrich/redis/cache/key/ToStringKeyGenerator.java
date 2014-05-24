@@ -2,7 +2,7 @@ package com.github.gerulrich.redis.cache.key;
 
 import java.io.Serializable;
 
-public class ToStringKeyStrategy extends HibernateKeyStragety {
+public class ToStringKeyGenerator extends HibernateKeyGenerator {
 
 	@Override
 	public String generateKey(Serializable key) {

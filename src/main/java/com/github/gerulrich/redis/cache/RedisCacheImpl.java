@@ -24,17 +24,17 @@ public class RedisCacheImpl
 
     private JedisPool jedisPool;
     private String name;
-    private KeyGenerator keyStrategy;
+    private KeyGenerator keyGenerator;
     private Serializer serializer;
     private int clearIndex;
     private int ttl;
 
-    public RedisCacheImpl(String name, JedisPool jedisPool, KeyGenerator keyStrategy, Serializer serializer, int clearIndex,
-        int ttl) {
+    public RedisCacheImpl(String name, JedisPool jedisPool, KeyGenerator keyGenerator, Serializer serializer,
+        int clearIndex, int ttl) {
         super();
         this.name = name;
         this.jedisPool = jedisPool;
-        this.keyStrategy = keyStrategy;
+        this.keyGenerator = keyGenerator;
         this.serializer = serializer;
         this.clearIndex = clearIndex;
         this.ttl = ttl;
@@ -49,7 +49,7 @@ public class RedisCacheImpl
     public Object get(Object key) throws CacheException {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyStrategy.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
             byte bytes[] = jedis.get(objectKey.getBytes());
             if (bytes == null) {
                 return null;
@@ -73,7 +73,7 @@ public class RedisCacheImpl
     public void put(Object key, Object value) throws CacheException {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyStrategy.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
             byte objectValue[] = this.serializer.serialize(value);
             jedis.setex(objectKey.getBytes(), this.ttl, objectValue);
         } catch (SerializationException e) {
@@ -91,7 +91,7 @@ public class RedisCacheImpl
     public void remove(Object key) throws CacheException {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyStrategy.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
             jedis.del(objectKey.getBytes());
         } catch (Exception e) {
             this.jedisPool.returnBrokenResource(jedis);
@@ -108,7 +108,7 @@ public class RedisCacheImpl
     public boolean isKeyInCache(Object key) {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyStrategy.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
             return jedis.exists(objectKey);
         } catch (Exception e) {
             this.jedisPool.returnBrokenResource(jedis);

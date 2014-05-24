@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import org.hibernate.cache.CacheKey;
 
-public abstract class HibernateKeyStragety extends AbstractKeyStrategy {
+public abstract class HibernateKeyGenerator extends AbstractKeyGenerator {
 
 	@Override
 	protected String transformKeyObject(Object key) {

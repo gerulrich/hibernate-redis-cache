@@ -20,7 +20,7 @@ public abstract class CacheDataRegion
     implements Region {
 
 
-    private static final String CACHE_LOCK_TIMEOUT_PROPERTY = "com.github.gerulrich.cache_lock_timeout";
+    private static final String CACHE_LOCK_TIMEOUT_PROPERTY = "com.github.gerulrich.hibernate.cache_lock_timeout";
     private static final int DEFAULT_CACHE_LOCK_TIMEOUT = 60000;
 
     /**

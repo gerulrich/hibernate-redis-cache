@@ -46,7 +46,6 @@ public abstract class AbstractCacheRegionFactory
         this.accessStrategyFactory = accessStrategyFactory;
     }
 
-
     protected abstract Cache getCache(String name) throws CacheException;
 
     /**
