@@ -1,12 +1,15 @@
 package com.github.gerulrich.redis.cache;
 
 import org.hibernate.cache.CacheException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import com.github.gerulrich.cache.Cache;
 import com.github.gerulrich.redis.cache.key.KeyGenerator;
+import com.github.gerulrich.redis.cache.serializer.SerializationException;
 import com.github.gerulrich.redis.cache.serializer.Serializer;
 
 /**
@@ -17,7 +20,7 @@ import com.github.gerulrich.redis.cache.serializer.Serializer;
 public class RedisCacheImpl
     implements Cache {
 
-    public static final String REDIS_CLEAR_INDEX_KEY = "hibernate:redis:clear:index";
+    private static final Logger logger = LoggerFactory.getLogger(RedisCacheImpl.class);
 
     private JedisPool jedisPool;
     private String name;
@@ -52,7 +55,10 @@ public class RedisCacheImpl
                 return null;
             }
             return this.serializer.deserialize(bytes);
+        } catch (SerializationException e) {
+            throw new CacheException("Error to get object from cache", e);
         } catch (Exception e) {
+            logger.error("Error to get oject from redis", e);
             this.jedisPool.returnBrokenResource(jedis);
             jedis = null;
             throw new CacheException("Error to get object from cache", e);
@@ -70,7 +76,7 @@ public class RedisCacheImpl
             String objectKey = this.keyStrategy.toKey(this.getName(), this.clearIndex, key);
             byte objectValue[] = this.serializer.serialize(value);
             jedis.setex(objectKey.getBytes(), this.ttl, objectValue);
-        } catch (Exception e) {
+        } catch (SerializationException e) {
             this.jedisPool.returnBrokenResource(jedis);
             jedis = null;
             throw new CacheException("Error to put object in cache", e);
@@ -116,13 +122,7 @@ public class RedisCacheImpl
     }
 
     @Override
-    public boolean removeAll() {
+    public void removeAll() {
         this.clearIndex++;
-        // increment clear index.
-        // TODO Auto-generated method stub
-        // return false;
-        throw new UnsupportedOperationException("not yet implemented");
     }
-
-
 }

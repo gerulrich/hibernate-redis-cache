@@ -29,7 +29,7 @@ public class CacheAccessStrategyFactoryImpl
         } else if (AccessType.NONSTRICT_READ_WRITE.equals(accessType)) {
             return new NonStrictReadWriteCacheEntityRegionAccessStrategy(entityRegion, entityRegion.getSettings());
         }
-        throw new IllegalArgumentException("unrecognized access strategy type [" + accessType + "]");
+        throw new IllegalArgumentException("only support read-only and non-strict-read-write strategies");
     }
 
     /**
@@ -43,7 +43,7 @@ public class CacheAccessStrategyFactoryImpl
             return new NonStrictReadWriteCacheCollectionRegionAccessStrategy(collectionRegion,
                 collectionRegion.getSettings());
         }
-        throw new IllegalArgumentException("unrecognized access strategy type [" + accessType + "]");
+        throw new IllegalArgumentException("only support read-only and non-strict-read-write strategies");
     }
 
 }
