@@ -26,7 +26,7 @@ public class RedisCacheRegionFactory
     private static final Logger logger = LoggerFactory.getLogger(RedisCacheRegionFactory.class);
     private static final int DEFAULT_CACHE_TTL = 120;
     private static final int DEFAULT_LOCK_TIMEOUT = 30000;
-    private static final String DEFAULT_KEY_GENERATOR = "com.github.gerulrich.redis.cache.key.ToStringKeyGenerator";
+    private static final String DEFAULT_KEY_GENERATOR = "com.github.gerulrich.redis.cache.key.StringKeyGenerator";
     private static final String DEFAULT_SERIALIZER = "com.github.gerulrich.redis.cache.serializer.StandarSerializer";
 
     private JedisPool jedisPool;
@@ -37,6 +37,7 @@ public class RedisCacheRegionFactory
     private long lockTimeout = DEFAULT_LOCK_TIMEOUT;
     private String keyGenerator = DEFAULT_KEY_GENERATOR;
     private String serializer = DEFAULT_SERIALIZER;
+    private String preffix = "redis:";
 
     public RedisCacheRegionFactory() {
         super(new CacheAccessStrategyFactoryImpl());
@@ -70,13 +71,19 @@ public class RedisCacheRegionFactory
         if (!this.caches.containsKey(name)) {
             int ttl = this.getTTL(name);
             int clearIndex = this.getClearIndex(name);
+            String preffix = this.getPreffixForCache();
             KeyGenerator keyGenerator = this.getKeyGenerator(name);
             Serializer serializer = this.getSerializer(name);
-            Cache cache = new RedisCacheImpl(name, this.jedisPool, keyGenerator, serializer, clearIndex, ttl);
+
+            Cache cache = new RedisCacheImpl(name, preffix, this.jedisPool, keyGenerator, serializer, clearIndex, ttl);
 
             if (logger.isDebugEnabled()) {
-                Object params[] = {name, clearIndex, ttl, this.getClasName(keyGenerator), this.getClasName(serializer)};
-                logger.debug("Create cache region {}, clear index: {}, ttl: {}, key generator: {}, serializer: {}", params);
+                Object params[] = {
+                    name, preffix, clearIndex, ttl, this.getClasName(keyGenerator), this.getClasName(serializer)};
+                logger
+                    .debug(
+                        "Creating redis cache region for {}, preffix: {}, clear index: {}, ttl: {}, key generator: {}, serializer: {}",
+                        params);
             }
 
             this.caches.put(name, cache);
@@ -97,6 +104,18 @@ public class RedisCacheRegionFactory
             this.jedisPool.returnResource(jedis);
         }
         return clearIndex;
+    }
+
+    private String getPreffixForCache() {
+        if (this.preffix == null || this.preffix.trim().isEmpty()) {
+            return "redis:";
+        } else {
+            if (this.preffix.endsWith(":")) {
+                return this.preffix;
+            } else {
+                return this.preffix + ":";
+            }
+        }
     }
 
     private String getClasName(Object object) {
@@ -180,5 +199,13 @@ public class RedisCacheRegionFactory
 
     public void setSerializer(String serializer) {
         this.serializer = serializer;
+    }
+
+    public String getPreffix() {
+        return this.preffix;
+    }
+
+    public void setPreffix(String preffix) {
+        this.preffix = preffix;
     }
 }

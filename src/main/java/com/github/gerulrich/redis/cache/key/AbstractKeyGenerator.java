@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractKeyGenerator
     implements KeyGenerator {
 
-    protected final Logger log = LoggerFactory.getLogger(this.getClass());
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
     private static final Pattern CLEAN_PATTERN = Pattern.compile("\\s");
 
     public String toKey(String regionName, long clearIndex, Object key) {
@@ -18,7 +18,9 @@ public abstract class AbstractKeyGenerator
 
         String keyString = this.concatenateKey(regionName, clearIndex, this.transformKeyObject(key));
         String finalKey = CLEAN_PATTERN.matcher(keyString).replaceAll("");
-        this.log.debug("Final cache key: [{}]", finalKey);
+        if (this.logger.isDebugEnabled()) {
+            this.logger.debug("Final cache key: [{}]", finalKey);
+        }
         return finalKey;
     }
 

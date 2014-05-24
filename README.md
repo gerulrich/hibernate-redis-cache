@@ -7,6 +7,11 @@ Hibernate 2nd level cache using redis
 	Hibernate (3.7.10.Final)
 	Jedis 2.4.2
 
+## Features
+
+* Implement "read-only" and "non strict read-write" strategies
+* 
+
 ## Build
 
 To build:
@@ -76,6 +81,8 @@ Spring configuration
 
 
 ## LICENSE
+
+Copyright 2014 German Ulrich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

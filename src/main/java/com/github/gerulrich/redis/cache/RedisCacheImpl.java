@@ -24,15 +24,17 @@ public class RedisCacheImpl
 
     private JedisPool jedisPool;
     private String name;
+    private String preffix;
     private KeyGenerator keyGenerator;
     private Serializer serializer;
     private int clearIndex;
     private int ttl;
 
-    public RedisCacheImpl(String name, JedisPool jedisPool, KeyGenerator keyGenerator, Serializer serializer,
-        int clearIndex, int ttl) {
+    public RedisCacheImpl(String name, String preffix, JedisPool jedisPool, KeyGenerator keyGenerator,
+        Serializer serializer, int clearIndex, int ttl) {
         super();
         this.name = name;
+        this.preffix = preffix;
         this.jedisPool = jedisPool;
         this.keyGenerator = keyGenerator;
         this.serializer = serializer;
@@ -49,7 +51,10 @@ public class RedisCacheImpl
     public Object get(Object key) throws CacheException {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.getKey(key);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Get object from redis with key [{}]", objectKey);
+            }
             byte bytes[] = jedis.get(objectKey.getBytes());
             if (bytes == null) {
                 return null;
@@ -73,7 +78,10 @@ public class RedisCacheImpl
     public void put(Object key, Object value) throws CacheException {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.getKey(key);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Put object to redis with key [{}]", objectKey);
+            }
             byte objectValue[] = this.serializer.serialize(value);
             jedis.setex(objectKey.getBytes(), this.ttl, objectValue);
         } catch (SerializationException e) {
@@ -91,7 +99,10 @@ public class RedisCacheImpl
     public void remove(Object key) throws CacheException {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.getKey(key);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Remove object from redis with key [{}]", objectKey);
+            }
             jedis.del(objectKey.getBytes());
         } catch (Exception e) {
             this.jedisPool.returnBrokenResource(jedis);
@@ -108,7 +119,7 @@ public class RedisCacheImpl
     public boolean isKeyInCache(Object key) {
         Jedis jedis = this.jedisPool.getResource();
         try {
-            String objectKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
+            String objectKey = this.getKey(key);
             return jedis.exists(objectKey);
         } catch (Exception e) {
             this.jedisPool.returnBrokenResource(jedis);
@@ -123,6 +134,17 @@ public class RedisCacheImpl
 
     @Override
     public void removeAll() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Remove data from redis for region {}", this.getName());
+        }
         this.clearIndex++;
+    }
+
+    private String getKey(Object key) {
+        String redisKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
+        if (this.preffix != null && !this.preffix.isEmpty()) {
+            return this.preffix + redisKey;
+        }
+        return redisKey;
     }
 }
