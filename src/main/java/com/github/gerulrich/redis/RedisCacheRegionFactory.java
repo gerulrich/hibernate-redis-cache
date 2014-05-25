@@ -101,10 +101,11 @@ public class RedisCacheRegionFactory
         Jedis jedis = this.jedisPool.getResource();
         int clearIndex = 0;
         try {
-            if (jedis.hexists(Constants.CLEAR_INDEX_KEY, name)) {
-                clearIndex = Integer.decode(jedis.hget(Constants.CLEAR_INDEX_KEY, name));
+            String clearIndexKey = this.preffix + Constants.CLEAR_INDEX_KEY;
+            if (jedis.hexists(clearIndexKey, name)) {
+                clearIndex = Integer.decode(jedis.hget(clearIndexKey, name));
             } else {
-                jedis.hset(Constants.CLEAR_INDEX_KEY, name, Integer.toString(clearIndex));
+                jedis.hset(clearIndexKey, name, Integer.toString(clearIndex));
             }
         } finally {
             this.jedisPool.returnResource(jedis);

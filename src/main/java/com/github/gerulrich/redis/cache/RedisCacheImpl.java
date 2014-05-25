@@ -8,6 +8,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import com.github.gerulrich.cache.Cache;
+import com.github.gerulrich.redis.Constants;
 import com.github.gerulrich.redis.cache.key.KeyGenerator;
 import com.github.gerulrich.redis.cache.serializer.SerializationException;
 import com.github.gerulrich.redis.cache.serializer.Serializer;
@@ -27,11 +28,17 @@ public class RedisCacheImpl
     private String preffix;
     private KeyGenerator keyGenerator;
     private Serializer serializer;
+    private boolean clustered;
     private int clearIndex;
     private int ttl;
 
     public RedisCacheImpl(String name, String preffix, JedisPool jedisPool, KeyGenerator keyGenerator,
         Serializer serializer, int clearIndex, int ttl) {
+        this(name, preffix, jedisPool, keyGenerator, serializer, clearIndex, ttl, false);
+    }
+
+    public RedisCacheImpl(String name, String preffix, JedisPool jedisPool, KeyGenerator keyGenerator,
+        Serializer serializer, int clearIndex, int ttl, boolean clustered) {
         super();
         this.name = name;
         this.preffix = preffix;
@@ -141,7 +148,20 @@ public class RedisCacheImpl
         if (logger.isDebugEnabled()) {
             logger.debug("Remove data from redis for region {}", this.getName());
         }
-        this.clearIndex++;
+        Jedis jedis = this.jedisPool.getResource();
+        try {
+            Long value = jedis.hincrBy(this.preffix + Constants.CLEAR_INDEX_KEY, this.getName(), 1L);
+            this.clearIndex = value.intValue();
+            if (this.clustered) {
+                jedis.publish(this.preffix + Constants.UPDATE_CLEAR_INDEX_KEY, this.getName());
+            }
+        } catch (Exception e) {
+            this.jedisPool.returnBrokenResource(jedis);
+            jedis = null;
+            throw new CacheException(e);
+        } finally {
+            this.jedisPool.returnResource(jedis);
+        }
     }
 
     private String getKey(Object key) {
