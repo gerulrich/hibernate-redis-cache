@@ -6,7 +6,6 @@ import java.util.Properties;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Region;
-import org.hibernate.cache.Timestamper;
 
 import com.github.gerulrich.cache.Cache;
 import com.github.gerulrich.hibernate.strategy.AccessStrategyFactory;
@@ -20,7 +19,7 @@ public abstract class CacheDataRegion
     implements Region {
 
 
-    private static final String CACHE_LOCK_TIMEOUT_PROPERTY = "com.github.gerulrich.cache_lock_timeout";
+    private static final String CACHE_LOCK_TIMEOUT_PROPERTY = "com.github.gerulrich.hibernate.cache_lock_timeout";
     private static final int DEFAULT_CACHE_LOCK_TIMEOUT = 60000;
 
     /**
@@ -39,7 +38,7 @@ public abstract class CacheDataRegion
         this.accessStrategyFactory = accessStrategyFactory;
         this.cache = cache;
         String timeout = properties.getProperty(CACHE_LOCK_TIMEOUT_PROPERTY, Integer.toString(DEFAULT_CACHE_LOCK_TIMEOUT));
-        this.cacheLockTimeout = Timestamper.ONE_MS * Integer.decode(timeout);
+        this.cacheLockTimeout = Integer.decode(timeout);
     }
 
     /**
@@ -104,7 +103,7 @@ public abstract class CacheDataRegion
      */
     @Override
     public long nextTimestamp() {
-        return Timestamper.next(); // TODO chage this
+        return this.accessStrategyFactory.getTimestamper().nextTimestamp();
     }
 
     /**

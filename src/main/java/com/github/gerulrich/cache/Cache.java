@@ -14,5 +14,5 @@ public interface Cache {
 
     boolean isKeyInCache(Object key) throws CacheException;
 
-    boolean removeAll();
+    void removeAll();
 }

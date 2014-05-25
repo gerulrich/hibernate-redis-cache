@@ -7,6 +7,11 @@ Hibernate 2nd level cache using redis
 	Hibernate (3.7.10.Final)
 	Jedis 2.4.2
 
+## Features
+
+* Implement "read-only" and "non strict read-write" strategies
+
+
 ## Build
 
 To build:
@@ -23,7 +28,7 @@ Maven:
 <dependency>
 	<groupId>com.github.gerulrich</groupId>
 	<artifactId>hibernate-redis-cache</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.1</version>
 </dependency>
 ```
 
@@ -51,7 +56,7 @@ Spring configuration
 <bean id="redisRegionFactory" class="com.github.gerulrich.redis.RedisCacheRegionFactory">
 	<property name="jedisPool" ref="jedisPool"/>
 	<!-- default Key Generator for redis keys -->
-	<property name="keyGenerator" value="com.github.gerulrich.redis.cache.key.ToStringKeyStrategy"/>
+	<property name="keyGenerator" value="com.github.gerulrich.redis.cache.key.ToStringKeyGenerator"/>
 	<!-- default serializer to store objects on redis -->
     <property name="serializer" value="com.github.gerulrich.redis.cache.serializer.StandarSerializer"/>
 	<!-- default ttl (expiration time for redis) -->
@@ -61,7 +66,7 @@ Spring configuration
 	<property name="properties">
 		<props>
 			<!-- override defaults -->
-			<prop name="com.myapp.MyEntity.key.generator">com.myapp.key.generator.CustomKeyGenerator</prop>
+			<prop name="com.myapp.MyEntity.key_generator">com.myapp.key.generator.CustomKeyGenerator</prop>
 			<prop name="com.myapp.MyEntity.serializer">com.myapp.serializer.CustomSerializer</prop>
 			<prop name="com.myapp.MyEntity.ttl">300</prop>
 		</props>
@@ -76,6 +81,8 @@ Spring configuration
 
 
 ## LICENSE
+
+Copyright 2014 German Ulrich
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
