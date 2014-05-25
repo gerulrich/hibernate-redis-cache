@@ -10,7 +10,7 @@ Hibernate 2nd level cache using redis
 ## Features
 
 * Implement "read-only" and "non strict read-write" strategies
-* 
+
 
 ## Build
 
@@ -28,7 +28,7 @@ Maven:
 <dependency>
 	<groupId>com.github.gerulrich</groupId>
 	<artifactId>hibernate-redis-cache</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.1</version>
 </dependency>
 ```
 
