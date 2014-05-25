@@ -39,6 +39,9 @@ public class RedisCacheRegionFactory
     private String keyGenerator = DEFAULT_KEY_GENERATOR;
     private String serializer = DEFAULT_SERIALIZER;
     private String preffix = "redis:";
+    private boolean clustered = false;
+    private ClearIndexSubscriber subscriber;
+    private Jedis jedisSubscriber;
 
     public RedisCacheRegionFactory() {
         super(new CacheAccessStrategyFactoryImpl(new LocalTimestamper()));
@@ -59,10 +62,36 @@ public class RedisCacheRegionFactory
         this.settings = settings;
         this.properties.putAll(properties);
         this.properties.put(Constants.CACHE_LOCK_TIMEOUT_PROPERTY, this.getLockTimeout());
+        if (this.clustered) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    RedisCacheRegionFactory.this.startSubscription();
+                }
+            }, "PubSub-" + this.getPreffixKey() + Constants.CLEAR_INDEX_KEY).start();
+        }
+    }
+
+    private void startSubscription() {
+        String channel = this.getPreffixKey() + Constants.CLEAR_INDEX_KEY;
+        logger.debug("Starting subcribtion for channel {}", channel);
+        this.subscriber = new ClearIndexSubscriber(this.caches);
+        this.jedisSubscriber = this.jedisPool.getResource();
+        this.jedisSubscriber.subscribe(this.subscriber, channel);
+    }
+
+    private void stopSubscription() {
+        if (this.clustered && this.subscriber != null) {
+            String channel = this.getPreffixKey() + Constants.CLEAR_INDEX_KEY;
+            logger.debug("Stopping subcribtion for channel {}", channel);
+            this.subscriber.unsubscribe(this.getPreffixKey() + Constants.CLEAR_INDEX_KEY);
+            this.jedisPool.returnResource(this.jedisSubscriber);
+        }
     }
 
     @Override
     public void stop() {
+        this.stopSubscription();
         // TODO
         this.caches.clear();
     }
@@ -77,11 +106,12 @@ public class RedisCacheRegionFactory
         if (!this.caches.containsKey(name)) {
             int ttl = this.getTTL(name);
             int clearIndex = this.getClearIndex(name);
-            String preffix = this.getPreffixForCache();
+            String preffix = this.getPreffixKey();
             KeyGenerator keyGenerator = this.getKeyGenerator(name);
             Serializer serializer = this.getSerializer(name);
 
-            Cache cache = new RedisCacheImpl(name, preffix, this.jedisPool, keyGenerator, serializer, clearIndex, ttl);
+            Cache cache = new RedisCacheImpl(name, preffix, this.jedisPool, keyGenerator, serializer, clearIndex, ttl,
+                this.clustered);
 
             if (logger.isDebugEnabled()) {
                 Object params[] = {
@@ -101,7 +131,7 @@ public class RedisCacheRegionFactory
         Jedis jedis = this.jedisPool.getResource();
         int clearIndex = 0;
         try {
-            String clearIndexKey = this.preffix + Constants.CLEAR_INDEX_KEY;
+            String clearIndexKey = this.getPreffixKey() + Constants.CLEAR_INDEX_KEY;
             if (jedis.hexists(clearIndexKey, name)) {
                 clearIndex = Integer.decode(jedis.hget(clearIndexKey, name));
             } else {
@@ -113,7 +143,7 @@ public class RedisCacheRegionFactory
         return clearIndex;
     }
 
-    private String getPreffixForCache() {
+    private String getPreffixKey() {
         if (this.preffix == null || this.preffix.trim().isEmpty()) {
             return "redis:";
         } else {
@@ -215,4 +245,13 @@ public class RedisCacheRegionFactory
     public void setPreffix(String preffix) {
         this.preffix = preffix;
     }
+
+    public boolean isClustered() {
+        return this.clustered;
+    }
+
+    public void setClustered(boolean clustered) {
+        this.clustered = clustered;
+    }
+
 }

@@ -164,6 +164,21 @@ public class RedisCacheImpl
         }
     }
 
+    public void updateClearIndex() {
+        Jedis jedis = this.jedisPool.getResource();
+        try {
+            this.clearIndex = Integer.decode(jedis.hget(this.preffix + Constants.CLEAR_INDEX_KEY, this.getName()));
+        } catch (Exception e) {
+            this.jedisPool.returnBrokenResource(jedis);
+            jedis = null;
+            throw new CacheException(e);
+        } finally {
+            if (jedis != null) {
+                this.jedisPool.returnResource(jedis);
+            }
+        }
+    }
+
     private String getKey(Object key) {
         String redisKey = this.keyGenerator.toKey(this.getName(), this.clearIndex, key);
         if (this.preffix != null && !this.preffix.isEmpty()) {
