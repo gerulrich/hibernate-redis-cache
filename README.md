@@ -63,6 +63,8 @@ Spring configuration
 	<property name="ttl" value="120"/>
 	<!-- preffix for all generated keys -->
 	<property name="preffix" value="myapp:test"/>
+	<!-- support for cluster enabled -->
+	<property name="clustered" value="true"/>
 	<property name="properties">
 		<props>
 			<!-- override defaults -->

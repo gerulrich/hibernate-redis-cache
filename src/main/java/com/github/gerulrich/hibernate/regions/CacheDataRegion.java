@@ -6,6 +6,7 @@ import java.util.Properties;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.Region;
+import org.hibernate.cache.Timestamper;
 
 import com.github.gerulrich.cache.Cache;
 import com.github.gerulrich.hibernate.strategy.AccessStrategyFactory;
@@ -32,13 +33,13 @@ public abstract class CacheDataRegion
      */
     protected final AccessStrategyFactory accessStrategyFactory;
 
-    private final int cacheLockTimeout;
+    private final int lockTimeout;
 
     public CacheDataRegion(AccessStrategyFactory accessStrategyFactory, Cache cache, Properties properties) {
         this.accessStrategyFactory = accessStrategyFactory;
         this.cache = cache;
         String timeout = properties.getProperty(CACHE_LOCK_TIMEOUT_PROPERTY, Integer.toString(DEFAULT_CACHE_LOCK_TIMEOUT));
-        this.cacheLockTimeout = Integer.decode(timeout);
+        this.lockTimeout = Integer.decode(timeout);
     }
 
     /**
@@ -103,7 +104,7 @@ public abstract class CacheDataRegion
      */
     @Override
     public long nextTimestamp() {
-        return this.accessStrategyFactory.getTimestamper().nextTimestamp();
+        return Timestamper.next();
     }
 
     /**
@@ -111,7 +112,7 @@ public abstract class CacheDataRegion
      */
     @Override
     public int getTimeout() {
-        return this.cacheLockTimeout;
+        return this.lockTimeout;
     }
 
     /**

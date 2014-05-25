@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.Timestamper;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cfg.Settings;
 import org.slf4j.Logger;
@@ -16,7 +17,6 @@ import redis.clients.jedis.JedisPool;
 import com.github.gerulrich.cache.Cache;
 import com.github.gerulrich.hibernate.AbstractCacheRegionFactory;
 import com.github.gerulrich.hibernate.strategy.CacheAccessStrategyFactoryImpl;
-import com.github.gerulrich.hibernate.timestamper.LocalTimestamper;
 import com.github.gerulrich.redis.cache.RedisCacheImpl;
 import com.github.gerulrich.redis.cache.key.KeyGenerator;
 import com.github.gerulrich.redis.cache.serializer.Serializer;
@@ -44,7 +44,7 @@ public class RedisCacheRegionFactory
     private Jedis jedisSubscriber;
 
     public RedisCacheRegionFactory() {
-        super(new CacheAccessStrategyFactoryImpl(new LocalTimestamper()));
+        super(new CacheAccessStrategyFactoryImpl());
         this.properties = new Properties();
         this.caches = new HashMap<String, Cache>();
     }
@@ -98,7 +98,7 @@ public class RedisCacheRegionFactory
 
     @Override
     public long nextTimestamp() {
-        return this.accessStrategyFactory.getTimestamper().nextTimestamp();
+        return Timestamper.next();
     }
 
     @Override
