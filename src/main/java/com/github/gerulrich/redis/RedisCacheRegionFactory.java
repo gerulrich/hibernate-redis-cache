@@ -16,6 +16,7 @@ import redis.clients.jedis.JedisPool;
 import com.github.gerulrich.cache.Cache;
 import com.github.gerulrich.hibernate.AbstractCacheRegionFactory;
 import com.github.gerulrich.hibernate.strategy.CacheAccessStrategyFactoryImpl;
+import com.github.gerulrich.hibernate.timestamper.LocalTimestamper;
 import com.github.gerulrich.redis.cache.RedisCacheImpl;
 import com.github.gerulrich.redis.cache.key.KeyGenerator;
 import com.github.gerulrich.redis.cache.serializer.Serializer;
@@ -40,7 +41,7 @@ public class RedisCacheRegionFactory
     private String preffix = "redis:";
 
     public RedisCacheRegionFactory() {
-        super(new CacheAccessStrategyFactoryImpl());
+        super(new CacheAccessStrategyFactoryImpl(new LocalTimestamper()));
         this.properties = new Properties();
         this.caches = new HashMap<String, Cache>();
     }
@@ -64,6 +65,11 @@ public class RedisCacheRegionFactory
     public void stop() {
         // TODO
         this.caches.clear();
+    }
+
+    @Override
+    public long nextTimestamp() {
+        return this.accessStrategyFactory.getTimestamper().nextTimestamp();
     }
 
     @Override

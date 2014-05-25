@@ -8,7 +8,6 @@ import org.hibernate.cache.CollectionRegion;
 import org.hibernate.cache.EntityRegion;
 import org.hibernate.cache.QueryResultsRegion;
 import org.hibernate.cache.RegionFactory;
-import org.hibernate.cache.Timestamper;
 import org.hibernate.cache.TimestampsRegion;
 import org.hibernate.cache.access.AccessType;
 import org.hibernate.cfg.Settings;
@@ -54,14 +53,6 @@ public abstract class AbstractCacheRegionFactory
     @Override
     public boolean isMinimalPutsEnabledByDefault() {
         return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long nextTimestamp() {
-        return Timestamper.next();
     }
 
     /**

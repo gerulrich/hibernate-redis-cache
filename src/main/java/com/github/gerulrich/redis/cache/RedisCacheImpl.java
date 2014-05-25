@@ -120,8 +120,12 @@ public class RedisCacheImpl
         Jedis jedis = this.jedisPool.getResource();
         try {
             String objectKey = this.getKey(key);
+            if (logger.isDebugEnabled()) {
+                logger.debug("verify if key is in cache [{}]", objectKey);
+            }
             return jedis.exists(objectKey);
         } catch (Exception e) {
+            logger.error("Error to check key in cache.", e);
             this.jedisPool.returnBrokenResource(jedis);
             jedis = null;
             return false;

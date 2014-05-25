@@ -10,6 +10,7 @@ import com.github.gerulrich.hibernate.strategy.ro.ReadOnlyCacheCollectionRegionA
 import com.github.gerulrich.hibernate.strategy.ro.ReadOnlyCacheEntityRegionAccessStrategy;
 import com.github.gerulrich.hibernate.strategy.rw.nonstrict.NonStrictReadWriteCacheCollectionRegionAccessStrategy;
 import com.github.gerulrich.hibernate.strategy.rw.nonstrict.NonStrictReadWriteCacheEntityRegionAccessStrategy;
+import com.github.gerulrich.hibernate.timestamper.Timestamper;
 
 /**
  * Class implementing {@link AccessStrategyFactory}
@@ -19,6 +20,14 @@ import com.github.gerulrich.hibernate.strategy.rw.nonstrict.NonStrictReadWriteCa
  */
 public class CacheAccessStrategyFactoryImpl
     implements AccessStrategyFactory {
+
+
+    private final Timestamper timestamper;
+
+    public CacheAccessStrategyFactoryImpl(Timestamper timestamper) {
+        super();
+        this.timestamper = timestamper;
+    }
 
     /**
      * {@inheritDoc}
@@ -44,6 +53,11 @@ public class CacheAccessStrategyFactoryImpl
                 collectionRegion.getSettings());
         }
         throw new IllegalArgumentException("only support read-only and non-strict-read-write strategies");
+    }
+
+    @Override
+    public Timestamper getTimestamper() {
+        return this.timestamper;
     }
 
 }
