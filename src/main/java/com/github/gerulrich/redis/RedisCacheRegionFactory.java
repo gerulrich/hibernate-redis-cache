@@ -80,20 +80,20 @@ public class RedisCacheRegionFactory
         this.jedisSubscriber.subscribe(this.subscriber, channel);
     }
 
-    private void stopSubscription() {
-        if (this.clustered && this.subscriber != null) {
-            String channel = this.getPreffixKey() + Constants.CLEAR_INDEX_KEY;
-            logger.debug("Stopping subcribtion for channel {}", channel);
-            this.subscriber.unsubscribe(this.getPreffixKey() + Constants.CLEAR_INDEX_KEY);
-            this.jedisPool.returnResource(this.jedisSubscriber);
-        }
-    }
-
     @Override
     public void stop() {
         this.stopSubscription();
         // TODO
         this.caches.clear();
+    }
+    
+    private void stopSubscription() {
+    	if (this.clustered && this.subscriber != null) {
+    		String channel = this.getPreffixKey() + Constants.CLEAR_INDEX_KEY;
+    		logger.debug("Stopping subcribtion for channel {}", channel);
+    		this.subscriber.unsubscribe(this.getPreffixKey() + Constants.CLEAR_INDEX_KEY);
+    		this.jedisPool.returnResource(this.jedisSubscriber);
+    	}
     }
 
     @Override
