@@ -81,22 +81,39 @@ public class RedisClient {
 		}
 	}
 	
+	
+	public boolean setLock(String key, String value, long time) {
+		Jedis jedis = jedisPool.getResource();
+		try {
+			String statusCode = jedis.set(key, value, "NX", "EX", time);
+			return "OK".equalsIgnoreCase(statusCode);
+		} catch (Exception e) {
+			logger.error("Failed to exec SET command with key {}", key, e);
+			jedisPool.returnResource(jedis);
+			jedis = null;
+			return false;
+		} finally {
+			if (jedis != null) {
+				jedisPool.returnResource(jedis);
+			}
+		}
+	}
+	
 	/**
 	 * 
 	 * @param key
 	 * @param value
 	 * @return
 	 */
-	public void del(String key, String value) {
+	public void delLock(String key, String value) {
 		String script = "if redis.call(\"get\",KEYS[1]) == ARGV[1] then return redis.call(\"del\",KEYS[1]) else return 0 end"; 
 		Jedis jedis = jedisPool.getResource();
 		try {
 			jedis.eval(script, 1, key, value);
-		} catch (JedisException e) {
+		} catch (Exception e) {
 			logger.error("Failed to exec DEL command with key {}", key, e);
 			jedisPool.returnResource(jedis);
 			jedis = null;
-			throw e;
 		} finally {
 			if (jedis != null) {
 				jedisPool.returnResource(jedis);

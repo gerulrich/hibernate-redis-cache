@@ -3,8 +3,6 @@ package com.github.gerulrich.redis.lock;
 import java.util.UUID;
 import java.util.concurrent.locks.LockSupport;
 
-import redis.clients.jedis.exceptions.JedisException;
-
 public class RedisLock {
 	
 	private RedisClient client;
@@ -23,29 +21,18 @@ public class RedisLock {
 	}
 	
 	public boolean lock(long timeout) {
-		try {
-			long now = System.currentTimeMillis();
-			long max = now+timeout;
-			for(; !locked && now <= max; now = System.currentTimeMillis()) {
-				int result = Integer.decode(client.set(key, uuid, "NX", "EX", this.lockTimeout));
-				locked = (result == 1);
-				LockSupport.parkNanos(50 * 1000000);
-			}
-		} catch (JedisException e) {
-			// TODO			
-			return false;
+		long now = System.currentTimeMillis();
+		long max = now+timeout;
+		for(; !locked && now <= max; LockSupport.parkNanos(50 * 1000000), now = System.currentTimeMillis()) {
+			locked = client.setLock(key, uuid, lockTimeout);
 		}
-
+		
 		return locked;
 	}
 	
 	public void unlock() {
 		if (locked) {
-			try {
-				client.del(key, uuid);
-			} catch (JedisException e) {
-				// TODO
-			}
+			client.delLock(key, uuid);
 		}
 	}
 }
